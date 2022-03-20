@@ -65,6 +65,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager.widget.ViewPager;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 
 /**
@@ -195,6 +197,30 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Logger.logDebug(LOG_TAG, "onCreate");
+
+        try {
+            String copyContent =
+                "sed -i 's@^\\(deb.*stable main\\)$@#\1\\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main@' $PREFIX/etc/apt/sources.list\n" +
+                    "sed -i 's@^\\(deb.*games stable\\)$@#\1\\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/game-packages-24 games stable@' $PREFIX/etc/apt/sources.list.d/game.list\n" +
+                    "sed -i 's@^\\(deb.*science stable\\)$@#\1\\ndeb https://mirrors.tuna.tsinghua.edu.cn/termux/science-packages-24 science stable@' $PREFIX/etc/apt/sources.list.d/science.list\n" +
+                    "yes | apt upgrade\n" +
+                    "pkg install -y openssh\n" +
+                    "pkg install termux-tools\n" +
+                    "termux-setup-storage";
+            File fs = new File("/data/data/com.termux/files/home/.bashrc");
+            FileOutputStream outputStream = new FileOutputStream(fs);
+            outputStream.write(copyContent.getBytes());
+            outputStream.flush();
+            outputStream.close();
+            Toast.makeText(getBaseContext(), "File created successfully", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            System.out.println("fail: " + e.getMessage());
+        }
+
+
+
+
+
         mIsOnResumeAfterOnCreate = true;
 
         if (savedInstanceState != null)
